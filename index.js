@@ -1,6 +1,6 @@
 import 'dotenv/config.js';
 import { Telegraf, Markup, session } from 'telegraf';
-import fs from 'fs/promises';
+import fs from 'node:fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
