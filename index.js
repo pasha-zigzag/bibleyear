@@ -96,6 +96,8 @@ function sendVerses(ctx, verses, pointer) {
     }
     if ((pointer + 5) < verses.length) {
         keyboard.push(Markup.button.callback('Вперёд ➡️', `navigate:${pointer + 5}`));
+    } else {
+        keyboard.push(Markup.button.callback('✅ Готово', `finish_reading`));
     }
     const inlineKeyboard = keyboard.length > 0 ? [keyboard] : [];
 
@@ -136,4 +138,14 @@ bot.action(/navigate:(\d+)/, async (ctx) => {
     ctx.answerCbQuery();
 });
 
+bot.action('finish_reading', async (ctx) => {
+    // Скрываем текст, заменяя его на поздравление
+    await ctx.editMessageText(
+        '🎉 Поздравляем! Вы прочитали все главы на сегодня!\n\nДо встречи завтра!',
+        { parse_mode: 'HTML' }
+    );
+    ctx.answerCbQuery();
+});
+
 bot.launch();
+
