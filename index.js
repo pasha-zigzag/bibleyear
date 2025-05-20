@@ -30,11 +30,14 @@ async function loadVersesForDay(dayNumber) {
         const data = await fs.readFile(filePath, 'utf-8');
         const books = JSON.parse(data);
 
-        const allVerses = [];
-        for (const [book, chapters] of Object.entries(books)) {
-            for (const [chapter, verses] of Object.entries(chapters)) {
-                for (const [verse, text] of Object.entries(verses)) {
-                    allVerses.push({
+        // Собираем все стихи по главам
+        const chapters = [];
+        for (const [book, chaptersObj] of Object.entries(books)) {
+            for (const [chapter, versesObj] of Object.entries(chaptersObj)) {
+                // Формируем массив стихов этой главы
+                const chapterVerses = [];
+                for (const [verse, text] of Object.entries(versesObj)) {
+                    chapterVerses.push({
                         book,
                         chapter,
                         verse,
@@ -42,27 +45,45 @@ async function loadVersesForDay(dayNumber) {
                         text: `${verse}. ${text}`
                     });
                 }
+                chapters.push(chapterVerses);
             }
         }
-        return allVerses;
+        return chapters; // массив глав, каждая глава — массив стихов
     } catch (e) {
         return null;
     }
 }
 
 // Собираем список глав для приветствия
-function getChaptersList(verses) {
-    // Сохраняем уникальные главы в порядке появления
-    const chaptersSet = new Set();
-    verses.forEach(v => chaptersSet.add(`${v.book} ${v.chapter}`));
-    return Array.from(chaptersSet);
+function getChaptersList(chapters) {
+    return chapters.map(verses => verses[0].chapterLabel);
 }
 
-// Отправка приветствия и списка глав
-async function sendGreeting(ctx, dayNumber, verses) {
-    const chapters = getChaptersList(verses);
-    const chaptersText = chapters.map((c, i) => `${i + 1}. <b>${c}</b>`).join('\n');
-    const message = `Добро пожаловать!\n\nСегодняшние главы для чтения (${dayNumber}-й день года):\n\n${chaptersText}\n\nНажмите кнопку ниже, чтобы начать чтение стихов.`;
+function paginateChapters(chapters, pageSize = 5) {
+    const pages = [];
+    for (const chapterVerses of chapters) {
+        let i = 0;
+        while (i < chapterVerses.length) {
+            // Сколько стихов осталось в главе?
+            const remaining = chapterVerses.length - i;
+            // Если остался один - добавляем его к предыдущей странице
+            if (remaining === 1 && pages.length > 0) {
+                pages[pages.length - 1].push(chapterVerses[i]);
+                i++; // всё, последняя страница этой главы готова
+            } else {
+                pages.push(chapterVerses.slice(i, i + pageSize));
+                i += pageSize;
+            }
+        }
+    }
+    return pages;
+}
+
+async function sendGreeting(ctx, pages, chapters) {
+    const today = getTodayDateString();
+    const chaptersList = getChaptersList(chapters);
+    const chaptersText = chaptersList.map((c, i) => `${i + 1}. <b>${c}</b>`).join('\n');
+    const message = `Добро пожаловать!\n\nГлавы для чтения на сегодня (${today}):\n\n${chaptersText}\n\nНажмите кнопку ниже, чтобы начать чтение стихов.`;
 
     await ctx.reply(message, {
         parse_mode: 'HTML',
@@ -72,19 +93,25 @@ async function sendGreeting(ctx, dayNumber, verses) {
     });
 }
 
-// Отправка блока стихов
-function sendVerses(ctx, verses, pointer) {
-    const chunk = verses.slice(pointer, pointer + 5);
+function getTodayDateString() {
+    const now = new Date();
+    const months = [
+        'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+        'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+    ];
+    return `${now.getDate()} ${months[now.getMonth()]}`;
+}
+
+function sendVerses(ctx, pages, pointer) {
+    const chunk = pages[pointer];
+    if (!chunk) return;
+
     let message = '';
     let chapterLabel = '';
 
     for (const verse of chunk) {
         if (chapterLabel !== verse.chapterLabel) {
-            if (chapterLabel !== '') {
-                message += '\n\n';
-            }
-
-            message += `<b>${verse.chapterLabel}</b>\n\n`;
+            message += `<b>${verse.chapterLabel}</b> <i>${pointer + 1}/${pages.length}</i>\n\n`;
             chapterLabel = verse.chapterLabel;
         }
         message += `${verse.text}\n`;
@@ -92,10 +119,10 @@ function sendVerses(ctx, verses, pointer) {
 
     const keyboard = [];
     if (pointer > 0) {
-        keyboard.push(Markup.button.callback('⬅️ Назад', `navigate:${pointer - 5}`));
+        keyboard.push(Markup.button.callback('⬅️ Назад', `navigate:${pointer - 1}`));
     }
-    if ((pointer + 5) < verses.length) {
-        keyboard.push(Markup.button.callback('Вперёд ➡️', `navigate:${pointer + 5}`));
+    if (pointer < pages.length - 1) {
+        keyboard.push(Markup.button.callback('Вперёд ➡️', `navigate:${pointer + 1}`));
     } else {
         keyboard.push(Markup.button.callback('✅ Готово', `finish_reading`));
     }
@@ -114,32 +141,31 @@ function sendVerses(ctx, verses, pointer) {
 bot.start(async (ctx) => {
     ctx.session = { pointer: 0 };
     const dayNumber = getTodayDayNumber();
-    const verses = await loadVersesForDay(dayNumber);
-    if (!verses) return ctx.reply('Нет чтения для сегодняшнего дня.');
-    ctx.session.verses = verses;
-    ctx.session.dayNumber = dayNumber;
-    await sendGreeting(ctx, dayNumber, verses);
+    const chapters = await loadVersesForDay(dayNumber);
+    if (!chapters) return ctx.reply('Нет чтения для сегодняшнего дня.');
+    const pages = paginateChapters(chapters, 5);
+    ctx.session.pages = pages;
+    ctx.session.chapters = chapters;
+    ctx.session.pointer = 0;
+    await sendGreeting(ctx, pages, chapters);
 });
 
-// Хендлер кнопки "Начать чтение"
 bot.action('start_reading', async (ctx) => {
     ctx.session.pointer = 0;
-    const verses = ctx.session.verses;
-    sendVerses(ctx, verses, 0);
+    const pages = ctx.session.pages;
+    sendVerses(ctx, pages, 0);
     ctx.answerCbQuery();
 });
 
-// Хендлер навигации
 bot.action(/navigate:(\d+)/, async (ctx) => {
     const pointer = parseInt(ctx.match[1], 10);
     ctx.session.pointer = pointer;
-    const verses = ctx.session.verses;
-    sendVerses(ctx, verses, pointer);
+    const pages = ctx.session.pages;
+    sendVerses(ctx, pages, pointer);
     ctx.answerCbQuery();
 });
 
 bot.action('finish_reading', async (ctx) => {
-    // Скрываем текст, заменяя его на поздравление
     await ctx.editMessageText(
         '🎉 Поздравляем! Вы прочитали все главы на сегодня!\n\nДо встречи завтра!',
         { parse_mode: 'HTML' }
@@ -148,4 +174,3 @@ bot.action('finish_reading', async (ctx) => {
 });
 
 bot.launch();
-
