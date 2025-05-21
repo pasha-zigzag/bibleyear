@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: biblebot-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: biblebot
+
+  bot:
+    build: ./bot
+    container_name: biblebot-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - ./bot:/usr/src/app
+    command: >
+      sh -c "npm install && DEBUG=telegraf:* npm run dev"

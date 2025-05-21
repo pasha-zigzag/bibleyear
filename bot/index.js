@@ -3,6 +3,10 @@ import { Telegraf, Markup, session } from 'telegraf';
 import fs from 'node:fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { connectMongo } from './db.js';
+import { mongoSession } from './mongoSession.js';
+
+await connectMongo();
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) {
@@ -14,7 +18,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const bot = new Telegraf(token);
+bot.use(mongoSession());
 bot.use(session());
+
 
 function getTodayDayNumber() {
     const now = new Date();
@@ -24,8 +30,8 @@ function getTodayDayNumber() {
     return Math.floor(diff / oneDay);
 }
 
-async function loadVersesForDay(dayNumber) {
-    const filePath = path.join(__dirname, 'data', `${dayNumber}.json`);
+async function loadVersesForDay(dayNumber, translation = 'SYNOD') {
+    const filePath = path.join(__dirname, 'data', translation, `${dayNumber}.json`);
     try {
         const data = await fs.readFile(filePath, 'utf-8');
         const books = JSON.parse(data);
@@ -139,9 +145,12 @@ function sendVerses(ctx, pages, pointer) {
 
 // Хендлер /start
 bot.start(async (ctx) => {
-    ctx.session = { pointer: 0 };
+    ctx.session = ctx.session || {};
+    ctx.session.pointer = 0;
+    ctx.userProfile.translation = ctx.userProfile.translation || 'SYNOD';
+
     const dayNumber = getTodayDayNumber();
-    const chapters = await loadVersesForDay(dayNumber);
+    const chapters = await loadVersesForDay(dayNumber, ctx.userProfile.translation);
     if (!chapters) return ctx.reply('Нет чтения для сегодняшнего дня.');
     const pages = paginateChapters(chapters, 5);
     ctx.session.pages = pages;
@@ -171,6 +180,21 @@ bot.action('finish_reading', async (ctx) => {
         { parse_mode: 'HTML' }
     );
     ctx.answerCbQuery();
+});
+
+// Команда выбора перевода
+bot.command('translation', async (ctx) => {
+    await ctx.reply('Выберите перевод:', Markup.inlineKeyboard([
+        [Markup.button.callback('Синодальный', 'set_translation:SYNOD')],
+        [Markup.button.callback('Новый русский', 'set_translation:NRT')]
+    ]));
+});
+
+bot.action(/set_translation:(SYNOD|NRT)/, async (ctx) => {
+    ctx.userProfile.translation = ctx.match[1];
+    ctx.userProfile._changed = true;
+    await ctx.answerCbQuery('Перевод сохранён!');
+    await ctx.editMessageText(`Выбран перевод: <b>${ctx.match[1] === 'SYNOD' ? 'Синодальный' : 'Новый русский'}</b>`, { parse_mode: 'HTML' });
 });
 
 bot.launch();
