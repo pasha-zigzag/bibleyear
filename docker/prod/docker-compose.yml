@@ -11,6 +11,10 @@ services:
       - ../../mongo_data:/data/db
     environment:
       MONGO_INITDB_DATABASE: biblebot
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    env_file:
+      - ../../.env
 
   bot:
     build:
