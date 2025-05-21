@@ -8,19 +8,19 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - ./mongo_data:/data/db
+      - ../../mongo_data:/data/db
     environment:
       MONGO_INITDB_DATABASE: biblebot
 
   bot:
-    build: ./bot
+    build:
+      context: ../..
+      dockerfile: docker/dev/node/Dockerfile
     container_name: biblebot-app
     restart: unless-stopped
     env_file:
-      - .env
+      - ../../.env
     depends_on:
       - mongo
     volumes:
-      - ./bot:/usr/src/app
-    command: >
-      sh -c "npm install && DEBUG=telegraf:* npm run dev"
+      - ../../bot:/usr/src/app
