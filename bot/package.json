@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "lint": "eslint .",
     "fetch": "node cli/fetchChapter.js"
   },
   "keywords": [
@@ -23,6 +24,9 @@
     "telegraf": "^4.16.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.27.0",
+    "eslint": "^9.27.0",
+    "globals": "^16.1.0",
     "nodemon": "^3.1.10"
   }
 }

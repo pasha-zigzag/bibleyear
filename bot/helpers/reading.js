@@ -38,6 +38,7 @@ export async function loadVersesForDay(dayNumber, translation = 'SYNOD') {
         }
         return chapters;
     } catch (e) {
+        console.log(e)
         return null;
     }
 }

@@ -9,8 +9,6 @@ export function mongoSession() {
         let profile = await users.findOne({ _id: userId });
         const { first_name, last_name } = ctx.from;
 
-        let needUpdate = false;
-
         if (!profile) {
             profile = {
                 _id: userId,
@@ -41,6 +39,7 @@ export function mongoSession() {
         await next();
 
         if (ctx.userProfile && ctx.userProfile._changed) {
+            // eslint-disable-next-line no-unused-vars
             const { _changed, ...toSave } = ctx.userProfile;
             await users.updateOne({ _id: userId }, { $set: toSave });
         }

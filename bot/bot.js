@@ -1,4 +1,4 @@
-import { Telegraf, Markup, session } from 'telegraf';
+import { Telegraf, session } from 'telegraf';
 import { mongoSession } from './mongoSession.js';
 import { registerActions, registerCommands, registerFilters } from './commands/index.js';
 
