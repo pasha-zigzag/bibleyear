@@ -91,7 +91,7 @@ export async function sendGreeting(ctx, pages, chapters) {
     const chaptersText = chaptersList.map((c, i) => `${i + 1}. <b>${c}</b>`).join('\n');
     const readingTimeMinutes = getReadingTimeMinutes(chapters);
 
-    const message = `Добро пожаловать!\n\nГлавы для чтения на сегодня (${today}):\n\n${chaptersText}\n\nПримерное время чтения: ~${readingTimeMinutes} мин.\n\nНажмите кнопку ниже, чтобы начать чтение стихов.`;
+    const message = `Главы для чтения на сегодня (${today}):\n\n${chaptersText}\n\nПримерное время чтения: ~${readingTimeMinutes} мин.`;
 
     await ctx.reply(message, {
         parse_mode: 'HTML',
