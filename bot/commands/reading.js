@@ -1,4 +1,5 @@
 import { sendVerses } from '../helpers/reading.js';
+import { Markup } from 'telegraf';
 
 export const readingActions = {
     startReading: async (ctx) => {
@@ -17,7 +18,12 @@ export const readingActions = {
     finishReading: async (ctx) => {
         await ctx.editMessageText(
             '🎉 Поздравляем! Вы прочитали все главы на сегодня!\n\nДо встречи завтра!',
-            { parse_mode: 'HTML' }
+            {
+                parse_mode: 'HTML',
+                ...Markup.inlineKeyboard([
+                    [Markup.button.callback('Читать заново', 'start_reading')]
+                ])
+            }
         );
         ctx.answerCbQuery();
     }

@@ -74,11 +74,24 @@ export function getTodayDateString() {
     return `${now.getDate()} ${months[now.getMonth()]}`;
 }
 
+function getReadingTimeMinutes(chapters) {
+    const totalWords = chapters.reduce((sum, chapter) => {
+        return sum + chapter.reduce((chapterSum, verse) => {
+            return chapterSum + verse.text.split(/\s+/).length;
+        }, 0);
+    }, 0);
+
+    // Расчёт времени чтения в минутах
+    return Math.ceil(totalWords / 170);
+}
+
 export async function sendGreeting(ctx, pages, chapters) {
     const today = getTodayDateString();
     const chaptersList = getChaptersList(chapters);
     const chaptersText = chaptersList.map((c, i) => `${i + 1}. <b>${c}</b>`).join('\n');
-    const message = `Добро пожаловать!\n\nГлавы для чтения на сегодня (${today}):\n\n${chaptersText}\n\nНажмите кнопку ниже, чтобы начать чтение стихов.`;
+    const readingTimeMinutes = getReadingTimeMinutes(chapters);
+
+    const message = `Добро пожаловать!\n\nГлавы для чтения на сегодня (${today}):\n\n${chaptersText}\n\nПримерное время чтения: ~${readingTimeMinutes} мин.\n\nНажмите кнопку ниже, чтобы начать чтение стихов.`;
 
     await ctx.reply(message, {
         parse_mode: 'HTML',
