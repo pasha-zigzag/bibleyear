@@ -5,7 +5,7 @@ import { message } from "telegraf/filters";
 import { enableNotificationsCommand, disableNotificationsCommand } from "./notifications.js";
 
 export function registerCommands(bot) {
-    bot.start(startCommand);
+    bot.start((ctx) => startCommand(ctx, bot));
     bot.command('translation', translationCommand);
     bot.command('enable_notifications', enableNotificationsCommand);
     bot.command('disable_notifications', disableNotificationsCommand);
@@ -13,7 +13,7 @@ export function registerCommands(bot) {
 
 export function registerActions(bot) {
     bot.action(/set_translation:(SYNOD|NRT)/, setTranslationAction);
-    bot.action('start_reading', readingActions.startReading);
+    bot.action(/start_reading:(\d+)/, readingActions.startReading);
     bot.action(/navigate:(\d+)/, readingActions.navigate);
     bot.action('finish_reading', readingActions.finishReading);
 }

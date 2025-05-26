@@ -85,7 +85,7 @@ function getReadingTimeMinutes(chapters) {
     return Math.ceil(totalWords / 170);
 }
 
-export async function sendGreeting(ctx, pages, chapters) {
+export async function sendGreeting(bot, userId, chapters) {
     const today = getTodayDateString();
     const chaptersList = getChaptersList(chapters);
     const chaptersText = chaptersList.map((c, i) => `${i + 1}. <b>${c}</b>`).join('\n');
@@ -93,15 +93,19 @@ export async function sendGreeting(ctx, pages, chapters) {
 
     const message = `Главы для чтения на сегодня (${today}):\n\n${chaptersText}\n\nПримерное время чтения: ~${readingTimeMinutes} мин.`;
 
-    await ctx.reply(message, {
+    await bot.telegram.sendMessage(userId, message, {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([
-            [Markup.button.callback('Начать чтение', 'start_reading')]
+            [Markup.button.callback('Читать', `start_reading:${getTodayDayNumber()}`)],
         ])
     });
 }
 
-export function sendVerses(ctx, pages, pointer) {
+export async function sendVerses(ctx) {
+    const pointer = ctx.session.pointer;
+    const chapters = await loadVersesForDay(ctx.session.dayNumber, ctx.userProfile.translation);
+    const pages = paginateChapters(chapters, 5);
+
     const chunk = pages[pointer];
     if (!chunk) return;
 

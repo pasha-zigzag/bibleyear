@@ -1,19 +1,18 @@
 import {getTodayDayNumber, sendVerses} from '../helpers/reading.js';
-import { Markup } from 'telegraf';
+import {Markup} from 'telegraf';
 import {updateUserSettings} from "../db/userSettings.js";
 
 export const readingActions = {
     startReading: async (ctx) => {
+        ctx.session = ctx.session || {};
         ctx.session.pointer = 0;
-        const pages = ctx.session.pages;
-        sendVerses(ctx, pages, 0);
+        ctx.session.dayNumber = parseInt(ctx.match[1], 10);
+        await sendVerses(ctx);
         ctx.answerCbQuery();
     },
     navigate: async (ctx) => {
-        const pointer = parseInt(ctx.match[1], 10);
-        ctx.session.pointer = pointer;
-        const pages = ctx.session.pages;
-        sendVerses(ctx, pages, pointer);
+        ctx.session.pointer = parseInt(ctx.match[1], 10);
+        await sendVerses(ctx);
         ctx.answerCbQuery();
     },
     finishReading: async (ctx) => {
