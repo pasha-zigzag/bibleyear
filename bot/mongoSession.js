@@ -15,7 +15,8 @@ export function mongoSession() {
                 translation: 'SYNOD',
                 first_name: first_name || '',
                 last_name: last_name || '',
-                // другие дефолты
+                lastReadingDay: 0,
+                lastStartNote: 0,
             };
             await users.insertOne(profile);
         } else {

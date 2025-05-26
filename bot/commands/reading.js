@@ -1,5 +1,6 @@
-import { sendVerses } from '../helpers/reading.js';
+import {getTodayDayNumber, sendVerses} from '../helpers/reading.js';
 import { Markup } from 'telegraf';
+import {updateUserSettings} from "../db/userSettings.js";
 
 export const readingActions = {
     startReading: async (ctx) => {
@@ -16,6 +17,9 @@ export const readingActions = {
         ctx.answerCbQuery();
     },
     finishReading: async (ctx) => {
+        const dayNumber = ctx.session.dayNumber ?? getTodayDayNumber();
+        await updateUserSettings(ctx.userProfile._id, { lastReadingDay: dayNumber });
+
         await ctx.editMessageText(
             '🎉 Поздравляем! Вы прочитали все главы на сегодня!\n\nДо встречи завтра!',
             {
