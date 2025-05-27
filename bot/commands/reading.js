@@ -24,7 +24,7 @@ export const readingActions = {
             {
                 parse_mode: 'HTML',
                 ...Markup.inlineKeyboard([
-                    [Markup.button.callback('Читать заново', 'start_reading')]
+                    [Markup.button.callback('Читать заново', `start_reading:${dayNumber}`)],
                 ])
             }
         );
