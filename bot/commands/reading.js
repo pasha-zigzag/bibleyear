@@ -4,19 +4,25 @@ import {updateUserSettings} from "../db/userSettings.js";
 
 export const readingActions = {
     startReading: async (ctx) => {
-        ctx.session = ctx.session || {};
-        ctx.session.pointer = 0;
-        ctx.session.dayNumber = parseInt(ctx.match[1], 10);
+        ctx.userProfile.pointer = 0;
+        ctx.userProfile.dayNumber = parseInt(ctx.match[1], 10);
+        await updateUserSettings(ctx.userProfile._id, {
+            pointer: ctx.userProfile.pointer,
+            dayNumber: ctx.userProfile.dayNumber,
+        });
         await sendVerses(ctx);
         ctx.answerCbQuery();
     },
     navigate: async (ctx) => {
-        ctx.session.pointer = parseInt(ctx.match[1], 10);
+        ctx.userProfile.pointer = parseInt(ctx.match[1], 10);
+        await updateUserSettings(ctx.userProfile._id, {
+            pointer: ctx.userProfile.pointer,
+        });
         await sendVerses(ctx);
         ctx.answerCbQuery();
     },
     finishReading: async (ctx) => {
-        const dayNumber = ctx.session.dayNumber ?? getTodayDayNumber();
+        const dayNumber = ctx.userProfile.dayNumber ?? getTodayDayNumber();
         await updateUserSettings(ctx.userProfile._id, { lastReadingDay: dayNumber });
 
         await ctx.editMessageText(

@@ -102,8 +102,9 @@ export async function sendGreeting(bot, userId, chapters) {
 }
 
 export async function sendVerses(ctx) {
-    const pointer = ctx.session.pointer;
-    const chapters = await loadVersesForDay(ctx.session.dayNumber, ctx.userProfile.translation);
+    const pointer = ctx.userProfile.pointer;
+
+    const chapters = await loadVersesForDay(ctx.userProfile.dayNumber, ctx.userProfile.translation);
     const pages = paginateChapters(chapters, 5);
 
     const chunk = pages[pointer];
