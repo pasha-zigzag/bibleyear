@@ -1,6 +1,6 @@
 import { getTodayDayNumber, loadVersesForDay, sendGreeting } from '../helpers/reading.js';
-import { videoNote } from "../data/videoNote.js";
 import {updateUserSettings} from "../db/userSettings.js";
+import {getVideoNoteForDay} from "../db/videoNotes.js";
 
 export async function startCommand(ctx, bot) {
     await sendDailyMessage(bot, ctx.userProfile)
@@ -11,10 +11,12 @@ export async function sendDailyMessage(bot, user) {
     const lastReadingDay = user.lastReadingDay;
 
     if (lastReadingDay !== todayDayNumber) {
-        const fileId = videoNote[todayDayNumber]?.start;
+        const videoNote = await getVideoNoteForDay(todayDayNumber)
+        const fileId = videoNote.start;
+
         if (fileId && todayDayNumber !== user.lastStartNote) {
-            await updateUserSettings(user._id, { lastStartNote: todayDayNumber });
             await bot.telegram.sendVideoNote(user._id, fileId);
+            await updateUserSettings(user._id, { lastStartNote: todayDayNumber });
         }
     }
 

@@ -1,12 +1,13 @@
 import { users } from './db.js';
+import { getUser } from "./db/userSettings.js";
 
 export function mongoSession() {
     return async (ctx, next) => {
         if (!ctx.from) return next();
         const userId = ctx.from.id;
 
-        let profile = await users.findOne({ _id: userId });
-        const { first_name, last_name } = ctx.from;
+        let profile = await getUser(userId);
+        const { first_name, last_name, username } = ctx.from;
 
         if (!profile) {
             profile = {
@@ -14,6 +15,7 @@ export function mongoSession() {
                 translation: 'SYNOD',
                 first_name: first_name || '',
                 last_name: last_name || '',
+                username: username || '',
                 lastReadingDay: 0,
                 lastStartNote: 0,
             };
@@ -28,6 +30,9 @@ export function mongoSession() {
             }
             if (!profile.translation || profile.translation === '') {
                 setObj.translation = 'SYNOD';
+            }
+            if (!profile.username || profile.username === '') {
+                setObj.username = username || '';
             }
             if (Object.keys(setObj).length > 0) {
                 await users.updateOne({ _id: userId }, { $set: setObj });
