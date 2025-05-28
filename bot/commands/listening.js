@@ -2,6 +2,7 @@ import { getAudioChapters } from "../db/audio.js";
 import {Markup} from 'telegraf';
 import {getTodayDayNumber} from "../helpers/reading.js";
 import {updateUserSettings} from "../db/userSettings.js";
+import {getVideoNoteForDay} from "../db/videoNotes.js";
 
 export const listeningActions = {
     startListening: async (ctx) => {
@@ -46,6 +47,16 @@ export const listeningActions = {
             }
         }
         await ctx.deleteMessage();
+
+        if (dayNumber !== ctx.userProfile.lastEndNote) {
+            const videoNote = await getVideoNoteForDay(dayNumber)
+            const fileId = videoNote?.end;
+
+            if (fileId) {
+                await ctx.sendVideoNote(fileId);
+                await updateUserSettings(ctx.userProfile._id, { lastEndNote: dayNumber });
+            }
+        }
 
         await ctx.reply(
             '🎉 Поздравляем! Вы прослушали все аудиозаписи на сегодня!\n\nДо встречи завтра!',

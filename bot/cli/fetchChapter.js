@@ -67,7 +67,9 @@ async function fetchChapter(dayNumber) {
             const bookName = index[bookNum] ?? bookNum;
             const chapters = draft[bookNum];
             for (let chapterNum of chapters) {
-                const audioUrl = `https://4bbl.ru/data/${translation}/${bookNum}/${chapterNum}.mp3`;
+                const formattedBookNum = String(bookNum).padStart(2, '0');
+                const formattedChapterNum = String(chapterNum).padStart(2, '0');
+                const audioUrl = `https://4bbl.ru/data/${translation}/${formattedBookNum}/${formattedChapterNum}.mp3`;
                 const outputDir = path.join(DATA_PATH, 'audio', translation, dayNumber);
                 const outputFile = path.join(outputDir, `${i}. ${bookName} ${chapterNum}.mp3`);
 

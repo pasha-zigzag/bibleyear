@@ -18,6 +18,7 @@ export function mongoSession() {
                 username: username || '',
                 lastReadingDay: 0,
                 lastStartNote: 0,
+                lastEndNote: 0,
             };
             await users.insertOne(profile);
         } else {

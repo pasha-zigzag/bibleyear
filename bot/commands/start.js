@@ -8,13 +8,12 @@ export async function startCommand(ctx, bot) {
 
 export async function sendDailyMessage(bot, user) {
     const todayDayNumber = getTodayDayNumber();
-    const lastReadingDay = user.lastReadingDay;
 
-    if (lastReadingDay !== todayDayNumber) {
-        const videoNote = await getVideoNoteForDay(todayDayNumber)
+    if (todayDayNumber !== user.lastStartNote) {
+        const videoNote = await getVideoNoteForDay(todayDayNumber);
         const fileId = videoNote?.start;
 
-        if (fileId && todayDayNumber !== user.lastStartNote) {
+        if (fileId) {
             await bot.telegram.sendVideoNote(user._id, fileId);
             await updateUserSettings(user._id, { lastStartNote: todayDayNumber });
         }

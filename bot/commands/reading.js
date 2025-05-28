@@ -2,6 +2,7 @@ import {getTodayDayNumber, sendVerses} from '../helpers/reading.js';
 import {Markup} from 'telegraf';
 import {updateUserSettings} from "../db/userSettings.js";
 import {startCommand} from "./start.js";
+import {getVideoNoteForDay} from "../db/videoNotes.js";
 
 export const readingActions = {
     startReading: async (ctx) => {
@@ -26,7 +27,19 @@ export const readingActions = {
         const dayNumber = ctx.userProfile.dayNumber ?? getTodayDayNumber();
         await updateUserSettings(ctx.userProfile._id, { lastReadingDay: dayNumber });
 
-        await ctx.editMessageText(
+        if (dayNumber !== ctx.userProfile.lastEndNote) {
+            const videoNote = await getVideoNoteForDay(dayNumber)
+            const fileId = videoNote?.end;
+
+            if (fileId) {
+                await ctx.sendVideoNote(fileId);
+                await updateUserSettings(ctx.userProfile._id, { lastEndNote: dayNumber });
+            }
+        }
+
+        await ctx.editMessageText('🎉 Отлично!')
+
+        await ctx.reply(
             '🎉 Поздравляем! Вы прочитали все главы на сегодня!\n\nДо встречи завтра!',
             {
                 parse_mode: 'HTML',
