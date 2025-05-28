@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from 'fs/promises';
+import { createWriteStream } from 'fs';
 import path from 'path';
 import axios from 'axios';
 import { fileURLToPath } from 'url';
@@ -9,38 +10,32 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const DATA_PATH = path.join(__dirname, '../data');
-const TRANSLATIONS = ['SYNOD', 'NRT'];
+const TEXT_TRANSLATIONS = ['SYNOD', 'NRT'];
+const AUDIO_TRANSLATIONS = ['syn-jbl', 'new-russian'];
 const INDEX_FILE = path.join(DATA_PATH, 'index.json');
 
 function cleanVerseText(text) {
-    // Удаляем пробелы в начале и конце
     let result = text.trim();
-    // После каждой запятой (если нет пробела) добавляем пробел
-    // Меняем ",слово" на ", слово"
     result = result.replace(/,([^\s])/g, ', $1');
     return result;
 }
 
 async function fetchChapter(dayNumber) {
-    // 1. Чтение draft-файла и index-файла
     const draftPath = path.join(DATA_PATH, `schema/${dayNumber}.json`);
     const draftRaw = await fs.readFile(draftPath, 'utf-8');
     const draft = JSON.parse(draftRaw);
     const index = JSON.parse(await fs.readFile(INDEX_FILE, 'utf-8'));
 
-    // 2. Сбор данных по переводам
-    for (let translation of TRANSLATIONS) {
+    // Обработка текстовых переводов
+    for (let translation of TEXT_TRANSLATIONS) {
         let dayResult = {};
         for (let bookNum of Object.keys(draft)) {
             const chapters = draft[bookNum];
             dayResult[bookNum] = {};
             for (let chapterNum of chapters) {
-                // Запрос к API
                 const apiUrl = `https://bolls.life/get-text/${translation}/${bookNum}/${chapterNum}/`;
                 const response = await axios.get(apiUrl);
-                // response.data — это массив объектов со стихами
 
-                // Преобразуем массив в объект: { "1": "текст", "2": "текст", ... }
                 const versesObj = {};
                 for (const verse of response.data) {
                     versesObj[String(verse.verse)] = cleanVerseText(verse.text);
@@ -49,14 +44,12 @@ async function fetchChapter(dayNumber) {
             }
         }
 
-        // 3. Преобразование номеров книг в названия
         let prettyResult = {};
         for (let bookNum of Object.keys(dayResult)) {
             const bookName = index[bookNum] ?? bookNum;
             prettyResult[bookName] = dayResult[bookNum];
         }
 
-        // 4. Сохраняем файл для перевода
         const outputDir = path.join(DATA_PATH, translation);
         await fs.mkdir(outputDir, { recursive: true });
         await fs.writeFile(
@@ -66,10 +59,39 @@ async function fetchChapter(dayNumber) {
         );
     }
 
-    console.log(`Готово! Сгенерированы файлы для дня ${dayNumber} в папках data/SYNOD и data/NRT.`);
+
+    // Обработка аудиопереводов
+    for (let translation of AUDIO_TRANSLATIONS) {
+        let i = 1;
+        for (let bookNum of Object.keys(draft)) {
+            const bookName = index[bookNum] ?? bookNum;
+            const chapters = draft[bookNum];
+            for (let chapterNum of chapters) {
+                const audioUrl = `https://4bbl.ru/data/${translation}/${bookNum}/${chapterNum}.mp3`;
+                const outputDir = path.join(DATA_PATH, 'audio', translation, dayNumber);
+                const outputFile = path.join(outputDir, `${i}. ${bookName} ${chapterNum}.mp3`);
+
+                try {
+                    await fs.mkdir(outputDir, {recursive: true});
+                    const response = await axios.get(audioUrl, {responseType: 'stream'});
+                    const writer = createWriteStream(outputFile);
+                    response.data.pipe(writer);
+                    await new Promise((resolve, reject) => {
+                        writer.on('finish', resolve);
+                        writer.on('error', reject);
+                    });
+                    console.log(`Скачан файл: ${outputFile}`);
+                    i++;
+                } catch (error) {
+                    console.error(`Ошибка при скачивании ${audioUrl}:`, error.message);
+                }
+            }
+        }
+    }
+
+    console.log(`Готово! Сгенерированы файлы для дня ${dayNumber}.`);
 }
 
-// --- CLI входная точка ---
 if (process.argv.length < 3) {
     console.log('Использование: node fetchChapter.js <dayNumber>');
     process.exit(1);

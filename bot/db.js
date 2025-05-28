@@ -6,6 +6,7 @@ const client = new MongoClient(uri);
 export const db = client.db("biblebot");
 export const users = db.collection("users");
 export const videoNotes = db.collection("videoNotes");
+export const audioChapters = db.collection("audioChapters");
 
 export async function connectMongo() {
     if (!client.topology?.isConnected()) await client.connect();

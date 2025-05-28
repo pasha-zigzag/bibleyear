@@ -12,7 +12,7 @@ export async function sendDailyMessage(bot, user) {
 
     if (lastReadingDay !== todayDayNumber) {
         const videoNote = await getVideoNoteForDay(todayDayNumber)
-        const fileId = videoNote.start;
+        const fileId = videoNote?.start;
 
         if (fileId && todayDayNumber !== user.lastStartNote) {
             await bot.telegram.sendVideoNote(user._id, fileId);

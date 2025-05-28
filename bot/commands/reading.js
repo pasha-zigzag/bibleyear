@@ -1,6 +1,7 @@
 import {getTodayDayNumber, sendVerses} from '../helpers/reading.js';
 import {Markup} from 'telegraf';
 import {updateUserSettings} from "../db/userSettings.js";
+import {startCommand} from "./start.js";
 
 export const readingActions = {
     startReading: async (ctx) => {
@@ -30,10 +31,15 @@ export const readingActions = {
             {
                 parse_mode: 'HTML',
                 ...Markup.inlineKeyboard([
-                    [Markup.button.callback('Читать заново', `start_reading:${dayNumber}`)],
+                    [Markup.button.callback('Начать заново', `start_again`)],
                 ])
             }
         );
+        ctx.answerCbQuery();
+    },
+    startReadingAgain: async (ctx, bot) => {
+        ctx.deleteMessage();
+        await startCommand(ctx, bot);
         ctx.answerCbQuery();
     }
 };

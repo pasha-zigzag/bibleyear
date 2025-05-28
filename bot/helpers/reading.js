@@ -96,7 +96,8 @@ export async function sendGreeting(bot, userId, chapters) {
     await bot.telegram.sendMessage(userId, message, {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([
-            [Markup.button.callback('Читать', `start_reading:${getTodayDayNumber()}`)],
+            Markup.button.callback('Читать', `start_reading:${getTodayDayNumber()}`),
+            Markup.button.callback('Слушать', `start_listening:${getTodayDayNumber()}`),
         ])
     });
 }
