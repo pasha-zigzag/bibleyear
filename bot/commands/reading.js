@@ -31,13 +31,15 @@ export const readingActions = {
             const videoNote = await getVideoNoteForDay(dayNumber)
             const fileId = videoNote?.end;
 
+            await ctx.editMessageText('🎉 Отлично!')
+
             if (fileId) {
                 await ctx.sendVideoNote(fileId);
                 await updateUserSettings(ctx.userProfile._id, { lastEndNote: dayNumber });
             }
+        } else {
+            ctx.deleteMessage();
         }
-
-        await ctx.editMessageText('🎉 Отлично!')
 
         await ctx.reply(
             '🎉 Поздравляем! Вы прочитали все главы на сегодня!\n\nДо встречи завтра!',
