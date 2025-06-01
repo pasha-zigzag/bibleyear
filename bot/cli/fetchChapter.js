@@ -32,15 +32,38 @@ async function fetchChapter(dayNumber) {
         for (let bookNum of Object.keys(draft)) {
             const chapters = draft[bookNum];
             dayResult[bookNum] = {};
-            for (let chapterNum of chapters) {
-                const apiUrl = `https://bolls.life/get-text/${translation}/${bookNum}/${chapterNum}/`;
-                const response = await axios.get(apiUrl);
 
-                const versesObj = {};
-                for (const verse of response.data) {
-                    versesObj[String(verse.verse)] = cleanVerseText(verse.text);
+            if (Array.isArray(chapters)) {
+                // Если значение массива — сохраняем всю главу
+                for (let chapterNum of chapters) {
+                    const apiUrl = `https://bolls.life/get-text/${translation}/${bookNum}/${chapterNum}/`;
+                    const response = await axios.get(apiUrl);
+
+                    const versesObj = {};
+                    for (const verse of response.data) {
+                        versesObj[String(verse.verse)] = cleanVerseText(verse.text);
+                    }
+                    dayResult[bookNum][chapterNum] = versesObj;
                 }
-                dayResult[bookNum][chapterNum] = versesObj;
+            } else if (typeof chapters === 'object') {
+                // Если значение объекта — сохраняем часть главы
+                for (let chapterNum of Object.keys(chapters)) {
+                    const verseRange = chapters[chapterNum];
+                    const apiUrl = `https://bolls.life/get-text/${translation}/${bookNum}/${chapterNum}/`;
+                    const response = await axios.get(apiUrl);
+
+                    const versesObj = {};
+                    for (const verse of response.data) {
+                        const verseNum = verse.verse;
+                        if (
+                            verseRange.length === 0 || // Если массив пустой — берем всю главу
+                            (verseNum >= verseRange[0] && verseNum <= verseRange[1]) // Если указан диапазон
+                        ) {
+                            versesObj[String(verseNum)] = cleanVerseText(verse.text);
+                        }
+                    }
+                    dayResult[bookNum][chapterNum] = versesObj;
+                }
             }
         }
 
@@ -66,7 +89,10 @@ async function fetchChapter(dayNumber) {
         for (let bookNum of Object.keys(draft)) {
             const bookName = index[bookNum] ?? bookNum;
             const chapters = draft[bookNum];
-            for (let chapterNum of chapters) {
+
+            let chapterNums = Array.isArray(chapters) ? chapters : Object.keys(chapters);
+
+            for (let chapterNum of chapterNums) {
                 const formattedBookNum = String(bookNum).padStart(2, '0');
                 const formattedChapterNum = String(chapterNum).padStart(2, '0');
                 const audioUrl = `https://4bbl.ru/data/${translation}/${formattedBookNum}/${formattedChapterNum}.mp3`;
@@ -74,8 +100,8 @@ async function fetchChapter(dayNumber) {
                 const outputFile = path.join(outputDir, `${i}. ${bookName} ${chapterNum}.mp3`);
 
                 try {
-                    await fs.mkdir(outputDir, {recursive: true});
-                    const response = await axios.get(audioUrl, {responseType: 'stream'});
+                    await fs.mkdir(outputDir, { recursive: true });
+                    const response = await axios.get(audioUrl, { responseType: 'stream' });
                     const writer = createWriteStream(outputFile);
                     response.data.pipe(writer);
                     await new Promise((resolve, reject) => {
