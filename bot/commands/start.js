@@ -14,8 +14,14 @@ export async function sendDailyMessage(bot, user) {
         const fileId = videoNote?.start;
 
         if (fileId) {
-            await bot.telegram.sendVideoNote(user._id, fileId);
-            await updateUserSettings(user._id, { lastStartNote: todayDayNumber });
+            try {
+                await bot.telegram.sendVideoNote(user._id, fileId);
+                await updateUserSettings(user._id, { lastStartNote: todayDayNumber });
+            } catch (error) {
+                if (error.message === '400: Bad Request: VOICE_MESSAGES_FORBIDDEN') {
+                    await bot.telegram.sendMessage(user._id, 'Не могу отправить видеообращение, так как в настройках чата запрещены голосовые сообщения. Пожалуйста, разрешите их и попробуйте снова.');
+                }
+            }
         }
     }
 
