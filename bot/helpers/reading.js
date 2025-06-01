@@ -43,11 +43,38 @@ export async function loadVersesForDay(dayNumber, translation = 'SYNOD') {
     }
 }
 
-export function getChaptersList(chapters) {
-    return chapters.map(verses => verses[0].chapterLabel);
+async function getChaptersList(dayNumber) {
+    const schema = await loadSchemaForDay(dayNumber);
+    const index = JSON.parse(await fs.readFile(path.join(__dirname, '../data/index.json'), 'utf-8'));
+
+    let chaptersText = '';
+    if (schema) {
+        for (const [book, chaptersObj] of Object.entries(schema)) {
+            if (Array.isArray(chaptersObj)) {
+                chaptersText += `<b>${index[book] ?? book}</b> ${chaptersObj.join(', ')}\n`;
+            } else {
+                for (const [chapter, verses] of Object.entries(chaptersObj)) {
+                    chaptersText += `<b>${index[book] ?? book}</b> ${chapter}:${verses.join('-')}`;
+                }
+            }
+        }
+    }
+
+    return chaptersText;
 }
 
-export function paginateChapters(chapters, pageSize = 5) {
+async function loadSchemaForDay(day) {
+    const filePath = path.join(__dirname, '../data/schema', `${day}.json`);
+    try {
+        const data = await fs.readFile(filePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (e) {
+        console.error(`Ошибка загрузки схемы для дня ${day}:`, e);
+        return null;
+    }
+}
+
+function paginateChapters(chapters, pageSize = 5) {
     const pages = [];
     for (const chapterVerses of chapters) {
         let i = 0;
@@ -65,7 +92,7 @@ export function paginateChapters(chapters, pageSize = 5) {
     return pages;
 }
 
-export function getTodayDateString() {
+function getTodayDateString() {
     const now = new Date();
     const months = [
         'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
@@ -85,13 +112,12 @@ function getReadingTimeMinutes(chapters) {
     return Math.ceil(totalWords / 170);
 }
 
-export async function sendGreeting(bot, userId, chapters) {
+export async function sendGreeting(bot, userId, chapters, todayDayNumber) {
     const today = getTodayDateString();
-    const chaptersList = getChaptersList(chapters);
-    const chaptersText = chaptersList.map((c, i) => `${i + 1}. <b>${c}</b>`).join('\n');
+    const chaptersList = await getChaptersList(todayDayNumber);
     const readingTimeMinutes = getReadingTimeMinutes(chapters);
 
-    const message = `Главы для чтения на сегодня (${today}):\n\n${chaptersText}\n\nПримерное время чтения: ~${readingTimeMinutes} мин.`;
+    const message = `Главы для чтения на сегодня (${today}):\n\n${chaptersList}\n\nПримерное время чтения: ~${readingTimeMinutes} мин.`;
 
     await bot.telegram.sendMessage(userId, message, {
         parse_mode: 'HTML',

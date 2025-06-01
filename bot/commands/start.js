@@ -30,5 +30,5 @@ export async function sendDailyMessage(bot, user) {
         return bot.telegram.sendMessage(user._id, 'Нет чтения для сегодняшнего дня.');
     }
 
-    await sendGreeting(bot, user._id, chapters);
+    await sendGreeting(bot, user._id, chapters, todayDayNumber);
 }
