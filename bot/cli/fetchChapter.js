@@ -5,6 +5,8 @@ import { createWriteStream } from 'fs';
 import path from 'path';
 import axios from 'axios';
 import { fileURLToPath } from 'url';
+import {audioChapters} from "../db.js";
+import {createBot} from "../bot.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,6 +14,10 @@ const __dirname = path.dirname(__filename);
 const DATA_PATH = path.join(__dirname, '../data');
 const TEXT_TRANSLATIONS = ['SYNOD', 'NRT'];
 const AUDIO_TRANSLATIONS = ['syn-jbl', 'new-russian'];
+const AUDIO_TRANSLATIONS_MAP = {
+    'syn-jbl': 'SYNOD',
+    'new-russian': 'NRT',
+};
 const INDEX_FILE = path.join(DATA_PATH, 'index.json');
 
 function cleanVerseText(text) {
@@ -86,6 +92,7 @@ async function fetchChapter(dayNumber) {
     // Обработка аудиопереводов
     for (let translation of AUDIO_TRANSLATIONS) {
         let i = 1;
+        let filePathList = [];
         for (let bookNum of Object.keys(draft)) {
             const bookName = index[bookNum] ?? bookNum;
             const chapters = draft[bookNum];
@@ -109,15 +116,45 @@ async function fetchChapter(dayNumber) {
                         writer.on('error', reject);
                     });
                     console.log(`Скачан файл: ${outputFile}`);
+
+                    filePathList.push(outputFile)
+
                     i++;
                 } catch (error) {
                     console.error(`Ошибка при скачивании ${audioUrl}:`, error.message);
                 }
             }
         }
+
+        await saveAudioFileToMongo(dayNumber, AUDIO_TRANSLATIONS_MAP[translation], filePathList);
     }
 
     console.log(`Готово! Сгенерированы файлы для дня ${dayNumber}.`);
+}
+
+async function saveAudioFileToMongo(dayNumber, translation, filePathList) {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const bot = createBot(token);
+
+    try {
+        let list = [];
+        for (const filePath of filePathList) {
+            const response = await bot.telegram.sendAudio(428301509, { source: filePath });
+            const fileId = response.audio.file_id;
+            list.push(fileId)
+        }
+
+        const audioData = {
+            day: Number(dayNumber),
+            translation,
+            list,
+        };
+
+        await audioChapters.insertOne(audioData)
+        console.log(`Сохранено в MongoDB: ${JSON.stringify(audioData)}`);
+    } catch (error) {
+        console.error(`Ошибка при обработке аудиофайла:`, error.message);
+    }
 }
 
 if (process.argv.length < 3) {
