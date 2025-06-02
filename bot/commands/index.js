@@ -29,4 +29,10 @@ export function registerFilters(bot) {
     bot.on(message('audio'), async (ctx) => {
         await ctx.reply('file_id: ' + ctx.message.audio.file_id);
     });
+    bot.on(message(), async (ctx) => {
+        if (ctx.message.text === '/chat_id') {
+            console.log('Chat ID:', ctx.chat.id);
+            await ctx.reply('Ваш chat ID: ' + ctx.chat.id);
+        }
+    });
 }
