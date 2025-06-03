@@ -7,9 +7,12 @@ import {getVideoNoteForDay} from "../db/videoNotes.js";
 export const listeningActions = {
     startListening: async (ctx) => {
         ctx.deleteMessage();
-        const dayNumber = parseInt(ctx.match[1], 10);
+        ctx.userProfile.dayNumber = parseInt(ctx.match[1], 10);
+        await updateUserSettings(ctx.userProfile._id, {
+            dayNumber: ctx.userProfile.dayNumber,
+        });
 
-        const audioChapters = await getAudioChapters(dayNumber, ctx.userProfile.translation);
+        const audioChapters = await getAudioChapters(ctx.userProfile.dayNumber, ctx.userProfile.translation);
 
         if (audioChapters?.list?.length) {
             const mediaGroup = audioChapters.list.map((fileId) => ({
