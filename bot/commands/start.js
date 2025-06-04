@@ -17,7 +17,7 @@ export async function sendDailyMessage(bot, user) {
         if (fileId) {
             try {
                 await bot.telegram.sendVideoNote(user._id, fileId);
-                if (user.username === 'ksuuunyaa') {
+                if (fileIdKsu && user.username === 'ksuuunyaa') {
                     await bot.telegram.sendVideoNote(user._id, fileIdKsu);
                 }
                 await updateUserSettings(user._id, { lastStartNote: todayDayNumber });
