@@ -5,7 +5,7 @@ import { createWriteStream } from 'fs';
 import path from 'path';
 import axios from 'axios';
 import { fileURLToPath } from 'url';
-import {audioChapters} from "../db.js";
+import {audioChapters, client, connectMongo} from "../db.js";
 import {createBot} from "../bot.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -135,6 +135,7 @@ async function fetchChapter(dayNumber) {
 async function saveAudioFileToMongo(dayNumber, translation, filePathList) {
     const token = process.env.TELEGRAM_BOT_TOKEN;
     const bot = createBot(token);
+    await connectMongo();
 
     try {
         let list = [];
@@ -155,6 +156,8 @@ async function saveAudioFileToMongo(dayNumber, translation, filePathList) {
     } catch (error) {
         console.error(`Ошибка при обработке аудиофайла:`, error.message);
     }
+
+    await client.close();
 }
 
 if (process.argv.length < 3) {
