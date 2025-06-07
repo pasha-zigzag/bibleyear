@@ -22,7 +22,8 @@ const INDEX_FILE = path.join(DATA_PATH, 'index.json');
 
 function cleanVerseText(text) {
     let result = text.trim();
-    result = result.replace(/,([^\s])/g, ', $1');
+    result = result.replace(/,(\S)/g, ', $1');
+    result = result.replace(/\.(\S)/g, '. $1');
     return result;
 }
 
