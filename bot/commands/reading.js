@@ -38,7 +38,11 @@ export const readingActions = {
                 await updateUserSettings(ctx.userProfile._id, { lastEndNote: dayNumber });
             }
         } else {
-            ctx.deleteMessage();
+            try {
+                await ctx.deleteMessage();
+            } catch (error) {
+                console.error(`Не удалось удалить сообщение пользователя ${ctx.userProfile.username}:`, error);
+            }
         }
 
         await ctx.reply(
@@ -53,7 +57,11 @@ export const readingActions = {
         ctx.answerCbQuery();
     },
     startReadingAgain: async (ctx, bot) => {
-        ctx.deleteMessage();
+        try {
+            await ctx.deleteMessage();
+        } catch (error) {
+            console.error(`Не удалось удалить сообщение пользователя ${ctx.userProfile.username}:`, error);
+        }
         await startCommand(ctx, bot);
         ctx.answerCbQuery();
     }

@@ -6,7 +6,12 @@ import {getVideoNoteForDay} from "../db/videoNotes.js";
 
 export const listeningActions = {
     startListening: async (ctx) => {
-        ctx.deleteMessage();
+        try {
+            await ctx.deleteMessage();
+        } catch (error) {
+            console.error(`Не удалось удалить сообщение пользователя ${ctx.userProfile.username}:`, error);
+        }
+
         ctx.userProfile.dayNumber = parseInt(ctx.match[1], 10);
         await updateUserSettings(ctx.userProfile._id, {
             dayNumber: ctx.userProfile.dayNumber,
@@ -49,7 +54,12 @@ export const listeningActions = {
                 console.error(`Не удалось удалить сообщение с ID ${messageId}:`, error);
             }
         }
-        await ctx.deleteMessage();
+
+        try {
+            await ctx.deleteMessage();
+        } catch (error) {
+            console.error(`Не удалось удалить сообщение пользователя ${ctx.userProfile.username}:`, error);
+        }
 
         if (dayNumber !== ctx.userProfile.lastEndNote) {
             const videoNote = await getVideoNoteForDay(dayNumber)
