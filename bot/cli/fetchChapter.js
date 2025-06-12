@@ -24,6 +24,7 @@ function cleanVerseText(text) {
     let result = text.trim();
     result = result.replace(/,(\S)/g, ', $1');
     result = result.replace(/\.(\S)/g, '. $1');
+    result = result.replace(/:(\S)/g, ': $1');
     return result;
 }
 
