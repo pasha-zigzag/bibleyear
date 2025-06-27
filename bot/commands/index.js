@@ -4,12 +4,14 @@ import { readingActions } from './reading.js';
 import { message } from "telegraf/filters";
 import { enableNotificationsCommand, disableNotificationsCommand } from "./notifications.js";
 import {listeningActions} from "./listening.js";
+import {video} from "./video.js";
 
 export function registerCommands(bot) {
     bot.start((ctx) => startCommand(ctx, bot));
     bot.command('translation', translationCommand);
     bot.command('enable_notifications', enableNotificationsCommand);
     bot.command('disable_notifications', disableNotificationsCommand);
+    bot.command('video', video);
 }
 
 export function registerActions(bot) {
