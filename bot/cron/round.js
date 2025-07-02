@@ -10,11 +10,11 @@ export function roundCron(bot) {
         minTime: 100,
     });
 
-    cron.schedule('0 16 * * *', async () => {
+    cron.schedule('5 16 * * *', async () => {
         console.log('Запуск отправки сообщения о закончившихся кружках');
 
         const todayDayNumber = getTodayDayNumber();
-        const videoNote = await getVideoNoteForDay(todayDayNumber);
+        const videoNote = await getVideoNoteForDay(todayDayNumber + 1);
         const fileId = videoNote?.start;
 
         if (fileId) {
