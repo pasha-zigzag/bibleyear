@@ -2,6 +2,7 @@ import 'dotenv/config.js';
 import { connectMongo } from './db.js';
 import { createBot } from './bot.js';
 import {morningCron} from "./cron/morning.js";
+import {roundCron} from "./cron/round.js";
 
 await connectMongo();
 
@@ -13,5 +14,6 @@ if (!token) {
 
 const bot = createBot(token);
 morningCron(bot);
+roundCron(bot);
 
 bot.launch();
