@@ -45,21 +45,15 @@ export const listeningActions = {
         const dayNumber = ctx.userProfile.dayNumber ?? getTodayDayNumber();
         await updateUserSettings(ctx.userProfile._id, { lastReadingDay: dayNumber });
 
-        const mediaGroupMessageIds = ctx.match[1].split(',').map((id) => parseInt(id, 10));
-
-        for (const messageId of mediaGroupMessageIds) {
-            try {
-                await ctx.telegram.deleteMessage(ctx.chat.id, messageId);
-            } catch (error) {
-                console.error(`Не удалось удалить сообщение с ID ${messageId}:`, error);
-            }
-        }
-
-        try {
-            await ctx.deleteMessage();
-        } catch (error) {
-            console.error(`Не удалось удалить сообщение пользователя ${ctx.userProfile.username}:`, error);
-        }
+        // const mediaGroupMessageIds = ctx.match[1].split(',').map((id) => parseInt(id, 10));
+        //
+        // for (const messageId of mediaGroupMessageIds) {
+        //     try {
+        //         await ctx.telegram.deleteMessage(ctx.chat.id, messageId);
+        //     } catch (error) {
+        //         console.error(`Не удалось удалить сообщение с ID ${messageId}:`, error);
+        //     }
+        // }
 
         if (dayNumber !== ctx.userProfile.lastEndNote) {
             const videoNote = await getVideoNoteForDay(dayNumber)
@@ -69,6 +63,12 @@ export const listeningActions = {
                 await ctx.sendVideoNote(fileId);
                 await updateUserSettings(ctx.userProfile._id, { lastEndNote: dayNumber });
             }
+        }
+
+        try {
+            await ctx.deleteMessage();
+        } catch (error) {
+            console.error(`Не удалось удалить сообщение пользователя ${ctx.userProfile.username}:`, error);
         }
 
         await ctx.reply(
