@@ -10,7 +10,7 @@ export function roundCron(bot) {
         minTime: 100,
     });
 
-    cron.schedule('5 16 * * *', async () => {
+    cron.schedule('0 11 * * *', async () => {
         console.log('Запуск отправки сообщения о закончившихся кружках');
 
         const todayDayNumber = getTodayDayNumber();
