@@ -14,6 +14,6 @@ if (!token) {
 
 const bot = createBot(token);
 morningCron(bot);
-roundCron(bot);
+//roundCron(bot);
 
 bot.launch();
