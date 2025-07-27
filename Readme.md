@@ -32,7 +32,7 @@ docker compose -f docker/dev/docker-compose.yml logs -f
 ```
 
 ### fetch
-Fetches chapters for a specific day. Usage: `xc fetch-chapter <dayNumber>`
+Fetches chapters for a specific day. Usage: `xc fetch <dayNumber>`
 ```sh
 docker compose -f docker/dev/docker-compose.yml run --rm bot node cli/fetchChapter.js $1
 ```
