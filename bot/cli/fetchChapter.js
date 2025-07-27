@@ -19,12 +19,15 @@ const AUDIO_TRANSLATIONS_MAP = {
     'new-russian': 'NRT',
 };
 const INDEX_FILE = path.join(DATA_PATH, 'index.json');
+const AUDIO_MAP_FILE = path.join(DATA_PATH, 'audioMap.json');
 
 function cleanVerseText(text) {
     let result = text.trim();
     result = result.replace(/,(\S)/g, ', $1');
     result = result.replace(/\.(\S)/g, '. $1');
     result = result.replace(/:(\S)/g, ': $1');
+    result = result.replace(/!(\S)/g, '! $1');
+    result = result.replace(/\?(\S)/g, '? $1');
     return result;
 }
 
@@ -33,6 +36,7 @@ async function fetchChapter(dayNumber) {
     const draftRaw = await fs.readFile(draftPath, 'utf-8');
     const draft = JSON.parse(draftRaw);
     const index = JSON.parse(await fs.readFile(INDEX_FILE, 'utf-8'));
+    const audioMap = JSON.parse(await fs.readFile(AUDIO_MAP_FILE, 'utf-8'));
 
     // Обработка текстовых переводов
     for (let translation of TEXT_TRANSLATIONS) {
@@ -102,7 +106,7 @@ async function fetchChapter(dayNumber) {
             let chapterNums = Array.isArray(chapters) ? chapters : Object.keys(chapters);
 
             for (let chapterNum of chapterNums) {
-                const formattedBookNum = String(bookNum).padStart(2, '0');
+                const formattedBookNum = audioMap[bookNum];
                 const formattedChapterNum = String(chapterNum).padStart(2, '0');
                 const audioUrl = `https://4bbl.ru/data/${translation}/${formattedBookNum}/${formattedChapterNum}.mp3`;
                 const outputDir = path.join(DATA_PATH, 'audio', translation, dayNumber);
