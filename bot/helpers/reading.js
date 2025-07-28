@@ -149,14 +149,16 @@ export async function sendVerses(ctx) {
     }
 
     const keyboard = [];
+
     if (pointer > 0) {
-        keyboard.push(Markup.button.callback('⬅️ Назад', `navigate:${pointer - 1}`));
+        keyboard.push(Markup.button.callback('⬅️ Назад', `navigate:${pointer - 1}:${ctx.userProfile.dayNumber}`));
     }
     if (pointer < pages.length - 1) {
-        keyboard.push(Markup.button.callback('Вперёд ➡️', `navigate:${pointer + 1}`));
+        keyboard.push(Markup.button.callback('Вперёд ➡️', `navigate:${pointer + 1}:${ctx.userProfile.dayNumber}`));
     } else {
-        keyboard.push(Markup.button.callback('✅ Готово', `finish_reading`));
+        keyboard.push(Markup.button.callback('✅ Готово', `finish_reading:${ctx.userProfile.dayNumber}`));
     }
+
     const inlineKeyboard = keyboard.length > 0 ? [keyboard] : [];
 
     const keyboardMarkup = Markup.inlineKeyboard(inlineKeyboard);
