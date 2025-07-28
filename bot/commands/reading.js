@@ -32,7 +32,7 @@ export const readingActions = {
             : ctx.userProfile.dayNumber ?? getTodayDayNumber();
         await updateUserSettings(ctx.userProfile._id, { lastReadingDay: dayNumber });
 
-        await ctx.editMessageText('🎉🎉🎉')
+        await ctx.editMessageText('🎉')
 
         if (dayNumber !== ctx.userProfile.lastEndNote) {
             const videoNote = await getVideoNoteForDay(dayNumber)
