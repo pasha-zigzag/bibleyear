@@ -26,7 +26,7 @@ export function registerActions(bot) {
 
 export function registerFilters(bot) {
     bot.on(message('video_note'), async (ctx) => {
-        await ctx.reply('file_id: `' + ctx.message.video_note.file_id + '`');
+        await ctx.reply('`' + ctx.message.video_note.file_id + '`', { parse_mode: 'MarkdownV2' });
     });
     bot.on(message('audio'), async (ctx) => {
         await ctx.reply('file_id: ' + ctx.message.audio.file_id);
