@@ -13,7 +13,7 @@ export function registerCommands(bot) {
     bot.command('enable_notifications', enableNotificationsCommand);
     bot.command('disable_notifications', disableNotificationsCommand);
     bot.command('video', video);
-    bot.command('poll', pollCommand);
+    //bot.command('poll', pollCommand);
 }
 
 export function registerActions(bot) {
