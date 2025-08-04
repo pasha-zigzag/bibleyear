@@ -5,6 +5,7 @@ import { message } from "telegraf/filters";
 import { enableNotificationsCommand, disableNotificationsCommand } from "./notifications.js";
 import {listeningActions} from "./listening.js";
 import {video} from "./video.js";
+import {handlePollAnswer, pollCommand} from "./poll.js";
 
 export function registerCommands(bot) {
     bot.start((ctx) => startCommand(ctx, bot));
@@ -12,6 +13,7 @@ export function registerCommands(bot) {
     bot.command('enable_notifications', enableNotificationsCommand);
     bot.command('disable_notifications', disableNotificationsCommand);
     bot.command('video', video);
+    bot.command('poll', pollCommand);
 }
 
 export function registerActions(bot) {
@@ -22,6 +24,7 @@ export function registerActions(bot) {
     bot.action('start_again', (ctx) => readingActions.startReadingAgain(ctx, bot));
     bot.action(/^start_listening:(\d+)$/, listeningActions.startListening);
     bot.action(/^finish_listening:(.+)$/, listeningActions.finishListening);
+    bot.action(/^poll_answer_(bot|app|none)$/, handlePollAnswer);
 }
 
 export function registerFilters(bot) {
