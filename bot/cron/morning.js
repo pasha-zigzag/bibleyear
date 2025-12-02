@@ -13,13 +13,12 @@ export function morningCron(bot) {
 
     cron.schedule('0 8 * * *', async () => {
         console.log('Запуск отправки стартового сообщения всем пользователям');
-        const allUsers = await users.find({}).toArray();
+        const activeUsers = await users.find({isActive: true}).toArray();
 
-        for (const user of allUsers) {
+        for (const user of activeUsers) {
             try {
                 await limiter.schedule(async () => {
                     await sendDailyMessage(bot, user);
-                    await updateUserSettings(user._id, { isActive: true });
                 });
             } catch (error) {
                 await updateUserSettings(user._id, { isActive: false });
